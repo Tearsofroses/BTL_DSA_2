@@ -214,6 +214,7 @@ xMap<K, V>::xMap(const xMap<K, V>& map) {
 template <class K, class V>
 xMap<K, V>& xMap<K, V>::operator=(const xMap<K, V>& map) {
   // TODO YOUR CODE IS HERE
+  if (this == &map) return *this;
   removeInternalData();
   copyMapFrom(map);
   return *this;

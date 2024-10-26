@@ -178,6 +178,7 @@ Heap<T>::Heap(const Heap<T>& heap) {
 template <class T>
 Heap<T>& Heap<T>::operator=(const Heap<T>& heap) {
   // YOUR CODE IS HERE
+  if (this == &heap) return *this;
   removeInternalData();
   copyFrom(heap);
   return *this;
