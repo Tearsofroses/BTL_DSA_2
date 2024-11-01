@@ -26,11 +26,10 @@ double CrossEntropy::forward(xt::xarray<double> X, xt::xarray<double> t) {
   // Todo CODE YOUR
   m_aCached_Ypred = X;
   m_aYtarget = t;
-  const double epsilon = 1e-7;
-  xt::xarray<double> log_x = xt::log(X + epsilon);
-  xt::xarray<double> CE_loss_array = -t * log_x;
-  double CE_loss = xt::sum(CE_loss_array)() / X.size();
-  return CE_loss; 
+  if (m_eReduction == REDUCE_MEAN)
+    return cross_entropy(X, t, true);
+  else
+    return cross_entropy(X, t, false);
 }
 xt::xarray<double> CrossEntropy::backward() {
   // Todo CODE YOUR
