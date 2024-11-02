@@ -531,6 +531,7 @@ void xMap<K, V>::rehash(int newCapacity) {
 template <class K, class V>
 void xMap<K, V>::removeInternalData() {
   // Remove user's data
+
   if (deleteKeys != 0) deleteKeys(this);
   if (deleteValues != 0) deleteValues(this);
 
@@ -557,7 +558,8 @@ template <class K, class V>
 void xMap<K, V>::copyMapFrom(const xMap<K, V>& map) {
   //! removeInternalData(); ???
 
-  this->capacity = map.capacity;
+  //this->capacity = map.capacity;
+  this->capacity = 10;
   this->count = 0;
   this->table = new DLinkedList<Entry*>[capacity];
 
@@ -568,7 +570,9 @@ void xMap<K, V>::copyMapFrom(const xMap<K, V>& map) {
   this->keyEqual = map.keyEqual;
   // SHOULD NOT COPY: deleteKeys, deleteValues => delete ONLY TIME in map if
   // needed
-  
+  deleteKeys = nullptr;
+  deleteValues = nullptr;
+
   // copy entries
   for (int idx = 0; idx < map.capacity; idx++) {
     DLinkedList<Entry*>& list = map.table[idx];
