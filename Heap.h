@@ -61,7 +61,7 @@ class Heap : public IHeap<T> {
   const T peek();
   void remove(T item, void (*removeItemData)(T) = 0);
   bool contains(T item);
-  int size() const;
+  int size()const;
   void heapify(T array[], int size);
   void clear();
   bool empty();
@@ -371,7 +371,7 @@ template <class T>
 int Heap<T>::getItem(T item) {
   // YOUR CODE IS HERE
   for (int i = 0; i < count; i++) {
-    if (elements[i] == item) {
+    if (compare(elements[i], item) == 0) {
       return i;
     }
   }
@@ -391,10 +391,10 @@ void Heap<T>::copyFrom(const Heap<T>& heap) {
   count = heap.count;
   elements = new T[capacity];
   this->comparator = heap.comparator;
-  // this->deleteUserData = heap.deleteUserData;
+  //this->deleteUserData = heap.deleteUserData;
 
   // Copy items from heap:
-  for (int idx = 0; idx < heap.size(); idx++) {
+  for (int idx = 0; idx < heap.count; idx++) {
     this->elements[idx] = heap.elements[idx];
   }
 }
