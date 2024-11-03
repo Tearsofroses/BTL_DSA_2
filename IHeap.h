@@ -25,7 +25,7 @@ public:
     virtual const T peek()=0;
     virtual void remove(T item, void (*removeItemData)(T)=0)=0;
     virtual bool contains(T item)=0;
-    virtual int size() const =0;
+    virtual int size()=0;
     virtual void heapify(T array[], int size)=0; //build heap from array having size items
     virtual void clear()=0;
     virtual bool empty()=0;
