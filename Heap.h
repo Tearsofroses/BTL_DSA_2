@@ -61,7 +61,7 @@ class Heap : public IHeap<T> {
   const T peek();
   void remove(T item, void (*removeItemData)(T) = 0);
   bool contains(T item);
-  int size()const;
+  int size();
   void heapify(T array[], int size);
   void clear();
   bool empty();
@@ -263,7 +263,7 @@ bool Heap<T>::contains(T item) {
 }
 
 template <class T>
-int Heap<T>::size() const{
+int Heap<T>::size() {
   // YOUR CODE IS HERE
   return count;
 }
