@@ -28,11 +28,9 @@ private:
     bool shuffle;
     bool drop_last;
     int nbatch;
-    ulong_tensor index;
+    ulong_tensor item_indices;
     int m_seed;
-    XArrayList<Batch<DType, LType>*> batches;
-    TensorDataset<DType, LType>* tensor;
-
+    
 public:
     DataLoader(Dataset<DType, LType>* ptr_dataset, 
             int batch_size, bool shuffle=true, 
@@ -40,54 +38,17 @@ public:
                 : ptr_dataset(ptr_dataset), 
                 batch_size(batch_size), 
                 shuffle(shuffle),
-                m_seed(seed),
-                drop_last(drop_last) {
-        nbatch = ptr_dataset->len()/batch_size;
-        index = xt::arange(0, ptr_dataset->len());
-        tensor = dynamic_cast<TensorDataset<DType, LType>*> (ptr_dataset);
-        if (drop_last && nbatch == 0) return;
-        if (nbatch == 0) nbatch = 1;
-        if (shuffle) {
-          xt::xarray<DType> tensor_data = tensor->getTensorData();
-          xt::xarray<LType> tensor_label = tensor->getTensorLabel();
-          xt::xarray<DType> shuffled_tensor_data = xt::empty<DType>(tensor_data.shape());
-          xt::xarray<LType> shuffled_tensor_label = xt::empty<LType>(tensor_label.shape());
-          if (m_seed >= 0) {
-            xt::random::seed(m_seed);
-          }
-          xt::random::shuffle(index);
-          int n = index.size();
-          for (int i = 0; i < n; i++) {
-            shuffled_tensor_data(i) = tensor_data(index[i]);
-            shuffled_tensor_label(i) = tensor_label(index[i]);
-          }
-          tensor->setTensorData(shuffled_tensor_data);
-          tensor->setTensorLabel(shuffled_tensor_label);
-        }
-        for (int i = 0; i < nbatch; i++) {
-            xt::xarray<DType> batch_data;
-            xt::xarray<LType> batch_label;
-            int start = i*batch_size;
-            int end = start + batch_size;
-            if (i == nbatch - 1)
-            if (!drop_last)
-              end = ptr_dataset->len();
-            if (tensor->getTensorData().dimension() == 0)
-                batch_data = tensor->getTensorData();
-            else
-                batch_data = xt::view(tensor->getTensorData(), xt::range(start, end), xt::all());
-            if (tensor->getTensorLabel().dimension() == 0)
-                batch_label = tensor->getTensorLabel();
-            else
-                batch_label = xt::view(tensor->getTensorLabel(), xt::range(start, end), xt::all());
-            batches.add(new Batch<DType, LType>(batch_data, batch_label));
-        }
+                m_seed(seed){
+            nbatch = ptr_dataset->len()/batch_size;
+            item_indices = xt::arange(0, ptr_dataset->len());
+            if (shuffle){
+                if (m_seed != -1){
+                    std::random::seed(m_seed);
+                }
+                std::random_shuffle(item_indices.begin(), item_indices.end());
+            }
     }
-    virtual ~DataLoader(){
-        for (int i = 0; i < nbatch; i++) {
-            delete batches.get(i);
-        }
-    }
+    virtual ~DataLoader(){}
     
     //New method: from V2: begin
     int get_batch_size(){ return batch_size; }
@@ -101,77 +62,72 @@ public:
     /////////////////////////////////////////////////////////////////////////
 public:
     Iterator begin() {
-    // TODO implement
-    return Iterator(this,true);
+    return Iterator(this,0);
   }
 
   Iterator end() {
-    // TODO implement
-    return Iterator(this,false);
+    return Iterator(this, batch_count);
   }
-  
-  //BEGIN of Iterator
 
-    //YOUR CODE IS HERE: to define iterator
   class Iterator {
    private:
-    int cursor;
-    DataLoader* data_loader;
+    int curr_index;
+    DataLoader<DType, LType>* data_loader;
    public:
-    // TODO implement contructor
-    Iterator(DataLoader* data_loader = 0, bool begin = true) 
-      : data_loader(data_loader)
-    {
-      if (begin)
-        cursor = 0;
-      else
-        cursor = data_loader->nbatch;
-    }
+    Iterator(DataLoader* data_loader = 0, int idx = 0) 
+      : data_loader(data_loader), curr_index(idx) {}
 
     Iterator& operator=(const Iterator& iterator) {
-      // TODO implement
       data_loader = iterator.data_loader;
-      cursor = iterator.cursor;
+      curr_index = iterator.curr_index;
       return *this;
     }
 
     Iterator& operator++() {
-      // TODO implement
-      cursor++;
+      curr_index++;
       return *this;
     }
 
     Iterator operator++(int) {
-      // TODO implement
       Iterator temp = *this;
       ++(*this);
       return temp;
     }
 
-    bool operator==(const Iterator &iterator) const
-    {
-      return cursor == iterator.cursor;
+    bool operator==(const Iterator &iterator) const {
+      return curr_index == iterator.curr_index;
     }
    
     bool operator!=(const Iterator& other) const {
-      // TODO implement
-      return cursor != other.cursor;
+      return curr_index != other.curr_index;
     }
 
     Batch<DType, LType> operator*() const {
-      // TODO implement
-      return *(data_loader->batches.get(cursor));
+      int start = curr_index * (data_loader->batch_size);
+      int end = start + (data_loader->batch_size);
+      if (curr_index == data_loader->batch_count - 1 && !(data_loader->drop_last))
+        end = data_loader->ptr_dataset->len();
+      xt::svector<std::size_t> data_shape = data_loader->ptr_dataset->get_data_shape();
+      xt::svector<std::size_t> label_shape = data_loader->ptr_dataset->get_label_shape();
+      data_shape[0] = end - start;
+      if (label_shape.size() == 0) {
+        xt::xarray<DType> batch_data = xt::zeros<DType>(data_shape);
+        for (int i = start; i < end; i++) {
+          xt::view(batch_data, i - start) = data_loader->ptr_dataset->getitem(data_loader->index(i)).getData(); 
+        }
+        return Batch<DType, LType> (batch_data, data_loader->ptr_dataset->getitem(0).getLabel());
+      }
+      label_shape[0] = end - start;
+      xt::xarray<DType> batch_data = xt::zeros<DType>(data_shape);
+      xt::xarray<LType> batch_label = xt::empty<LType>(label_shape);
+      for (int i = start; i < end; i++) {
+        xt::view(batch_data, i - start) = data_loader->ptr_dataset->getitem(data_loader->index(i)).getData();
+        xt::view(batch_label, i - start) = data_loader->ptr_dataset->getitem(data_loader->index(i)).getLabel();
+      }
+      return Batch<DType, LType> (batch_data, batch_label);
     }
   };
-
-    //END of Iterator
-    
-    /////////////////////////////////////////////////////////////////////////
-    // The section for supporting the iteration and for-each to DataLoader //
-    /// END: Section                                                       //
-    /////////////////////////////////////////////////////////////////////////
 };
-
 
 #endif /* DATALOADER_H */
 

@@ -1,10 +1,9 @@
 /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt
- * to change this license Click nbfs://nbhost/ /Templates/cppFiles/file.h to
- * edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/cppFiles/file.h to edit this template
  */
 
-/*
+/* 
  * File:   dataset.h
  * Author: ltsach
  *
@@ -36,6 +35,7 @@ class Batch {
   xt::xarray<LType> label;
 
  public:
+  Batch() = default;
   Batch(xt::xarray<DType> data, xt::xarray<LType> label)
       : data(data), label(label) {}
   virtual ~Batch() {}
@@ -52,8 +52,8 @@ class Dataset {
 
   virtual int len() = 0;
   virtual DataLabel<DType, LType> getitem(int index) = 0;
-  virtual xt::svector<unsigned long> get_data_shape() = 0;
-  virtual xt::svector<unsigned long> get_label_shape() = 0;
+  virtual xt::svector<std::size_t> get_data_shape() = 0;
+  virtual xt::svector<std::size_t> get_label_shape() = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -62,48 +62,26 @@ class TensorDataset : public Dataset<DType, LType> {
  private:
   xt::xarray<DType> data;
   xt::xarray<LType> label;
-  xt::svector<unsigned long> data_shape, label_shape;
+  xt::svector<std::size_t> data_shape, label_shape;
 
  public:
-  /* TensorDataset:
-   * need to initialize:
-   * 1. data, label;
-   * 2. data_shape, label_shape
-   */
   TensorDataset(xt::xarray<DType> data, xt::xarray<LType> label)
     : data(data), label(label)
   {
-    /* TODO: your code is here for the initialization
-     */
-    data_shape = xt::svector<unsigned long>(data.shape().begin(), data.shape().end());
-    label_shape = xt::svector<unsigned long>(label.shape().begin(), label.shape().end());
-  }
-  /* len():
-   *  return the size of dimension 0
-   */
-  int len() {
-    /* TODO: your code is here to return the dataset's length
-     */
-    return data.shape()[0];
+    data_shape = data.shape();
+    label_shape = label.shape();
   }
 
-  /* getitem:
-   * return the data item (of type: DataLabel) that is specified by index
-   */
+  int len() {
+    return data_shape[0];
+  }
+
   DataLabel<DType, LType> getitem(int index) {
-    /* TODO: your code is here
-     */
     if (index < 0 || index >= len()) 
       throw out_of_range("Index is out of range!");
-    int data_dimension = data.dimension();
     int label_dimension = label.dimension();
-    xt::xarray<DType> temp_data;
+    xt::xarray<DType> temp_data = xt::view(data, index);
     xt::xarray<LType> temp_label;
-    if (data_dimension == 0)
-      temp_data = data;
-    else 
-      temp_data = xt::view(data, index);
-    
     if (label_dimension == 0)
       temp_label = label;
     else
@@ -111,32 +89,15 @@ class TensorDataset : public Dataset<DType, LType> {
     return DataLabel<DType, LType> (temp_data, temp_label);
   }
 
-  xt::svector<unsigned long> get_data_shape() {
-    /* TODO: your code is here to return data_shape
-     */
+  xt::svector<std::size_t> get_data_shape() {
     return data_shape;
   }
-  xt::svector<unsigned long> get_label_shape() {
-    /* TODO: your code is here to return label_shape
-     */
+
+  xt::svector<std::size_t> get_label_shape() {
     return label_shape;
   }
 
-  xt::xarray<DType> getTensorData() {
-    return data;
-  }
-
-  void setTensorData(xt::xarray<DType> setdata) {
-    data = setdata;
-  }
-
-  void setTensorLabel(xt::xarray<LType> setlabel) {
-    label = setlabel;
-  }
-
-  xt::xarray<LType> getTensorLabel() {
-    return label;
-  }
+  virtual ~TensorDataset() {};
 };
 
 #endif /* DATASET_H */
