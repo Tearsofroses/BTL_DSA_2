@@ -66,7 +66,7 @@ public:
   }
 
   Iterator end() {
-    return Iterator(this, batch_count);
+    return Iterator(this, nbatch);
   }
 
   class Iterator {
