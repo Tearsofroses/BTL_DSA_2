@@ -43,9 +43,9 @@ public:
             item_indices = xt::arange(0, ptr_dataset->len());
             if (shuffle){
                 if (m_seed >= 0){
-                    xt::random::(m_seed);
+                    xt::random::seed(m_seed);
                 }
-                xt::random::shuffle(item_indices.begin(), item_indices.end());
+                xt::random::shuffle(item_indices);
             }
     }
     virtual ~DataLoader(){}
