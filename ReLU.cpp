@@ -13,7 +13,6 @@
  */
 
 #include "layer/ReLU.h"
-
 #include "ann/functions.h"
 #include "sformat/fmt_lib.h"
 
