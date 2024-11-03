@@ -42,10 +42,10 @@ public:
             nbatch = ptr_dataset->len()/batch_size;
             item_indices = xt::arange(0, ptr_dataset->len());
             if (shuffle){
-                if (m_seed != -1){
-                    std::random::seed(m_seed);
+                if (m_seed >= 0){
+                    xt::random::(m_seed);
                 }
-                std::random_shuffle(item_indices.begin(), item_indices.end());
+                xt::random::shuffle(item_indices.begin(), item_indices.end());
             }
     }
     virtual ~DataLoader(){}
