@@ -147,21 +147,26 @@ xt::xarray<double> FCLayer::forward(xt::xarray<double> X) {
     if (m_trainable)
         m_aCached_X = X;
     xt::xarray<double> Y;
-    if (X.dimension() == 1)
-        Y = xt::linalg::dot(m_aWeights, X);
-    else
-        Y = xt::linalg::outer(X, m_aWeights);
+    Y = xt::linalg::tensordot(X, xt::transpose(m_aWeights), {1}, {0});
     if (m_bUse_Bias)
-        Y += xt::broadcast(m_aBias, Y.shape());
+        Y = Y + m_aBias;
     return Y;
 }
 xt::xarray<double> FCLayer::backward(xt::xarray<double> DY) {
     //YOUR CODE IS HERE
     m_unSample_Counter += DY.shape()[0];
     xt::xarray<double> DX = xt::linalg::dot(DY, m_aWeights);
-    m_aGrad_W = xt::linalg::outer(DY, m_aCached_X);
-    if (m_bUse_Bias)
-        m_aGrad_b = xt::sum(DY, 0);
+    int n = DY.shape()[0];
+    for (int i = 0; i < n; i++) {
+        xt::xarray<double> dy = xt::view(DY, i, xt::all());
+        xt::xarray<double> x = xt::view(m_aCached_X, i, xt::all());
+        m_aGrad_W += xt::linalg::outer(dy, xt::transpose(x));
+    }
+    if (m_bUse_Bias) {
+        for (int i = 0; i < n; i++) {
+            m_aGrad_b += xt::view(DY, i, xt::all());
+        }
+    }
     return DX;
 }
 

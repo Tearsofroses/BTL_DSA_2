@@ -31,7 +31,7 @@ Sigmoid::Sigmoid(const Sigmoid& orig) {
 Sigmoid::~Sigmoid() {}
 xt::xarray<double> Sigmoid::forward(xt::xarray<double> X) {
   // Todo CODE YOUR
-  m_aCached_Y = 1 / (1 + xt::exp(-X));
+  m_aCached_Y = 1.0 / (1.0 + xt::exp(-X));
   return m_aCached_Y;
 }
 

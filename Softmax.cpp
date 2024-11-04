@@ -33,6 +33,7 @@ Softmax::~Softmax() {}
 
 xt::xarray<double> Softmax::forward(xt::xarray<double> X) {
   // Todo CODE YOUR
+  m_aCached_Y = xt::xarray<double>::from_shape(X.shape());
   if (X.dimension() < 2) 
     this->m_aCached_Y = softmax(X);
   else {
@@ -46,7 +47,7 @@ xt::xarray<double> Softmax::forward(xt::xarray<double> X) {
 xt::xarray<double> Softmax::backward(xt::xarray<double> DY) {
   // Todo CODE YOUR
   xt::xarray<double> Z(m_aCached_Y.shape());
-  if (Z.dimension() < 2) {
+  if (DY.dimension() < 2) {
     xt::xarray<double> jacobian = xt::diag(m_aCached_Y) - xt::linalg::outer(m_aCached_Y, m_aCached_Y);
     Z = xt::linalg::dot(DY, jacobian);
   }
