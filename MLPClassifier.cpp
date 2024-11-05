@@ -60,10 +60,7 @@ double_tensor MLPClassifier::predict(double_tensor X, bool make_decision){
     //DO the inference
     
     //YOUR CODE IS HERE
-    for (auto pLayer: m_layers){
-        X = pLayer->forward(X);
-    }
-    double_tensor Y = X;
+    double_tensor Y = this->forward(X);
     //RESTORE the previous mode
     this->set_working_mode(old_mode);
 
@@ -93,11 +90,11 @@ double_tensor MLPClassifier::predict(
     for(auto batch: *pLoader){
         //YOUR CODE IS HERE
         if (first_batch) {
-            results = forward(batch->getData());
+            results = forward(batch.getData());
             first_batch = false;
         }
         else {
-            results += forward(batch->getData());       
+            results += forward(batch.getData());       
         }
     }
     cout << "Prediction: End" << endl;
@@ -118,10 +115,11 @@ double_tensor MLPClassifier::evaluate(DataLoader<double, double>* pLoader){
     meter.reset_metrics();
     
     for (auto batch : *pLoader){
-        double_tensor X = batch->getData();
-        double_tensor t = batch->getLabel();
+        double_tensor X = batch.getData();
+        double_tensor t = batch.getLabel();
         double_tensor Y = forward(X);
         Y = xt::argmax(Y, -1);
+        t = xt::argmax(t, -1);
         meter.accumulate(t, Y);
     }
     //YOUR CODE IS HERE
@@ -162,9 +160,7 @@ void MLPClassifier::set_working_mode(bool trainable){
 //protected: for the training mode: begin
 double_tensor MLPClassifier::forward(double_tensor X){
     //YOUR CODE IS HERE
-    int layer_size = m_layers.size();
-    for (int idx = 0; idx < layer_size; idx++){
-        ILayer* pLayer = m_layers.get(idx);
+    for (ILayer* pLayer: m_layers){
         X = pLayer->forward(X);
     }
     return X;
@@ -172,11 +168,9 @@ double_tensor MLPClassifier::forward(double_tensor X){
 void MLPClassifier::backward(){
     //YOUR CODE IS HERE
     double_tensor DY = m_pLossLayer->backward();
-    int layer_size = m_layers.size();
     for (auto it = m_layers.bbegin(); it != m_layers.bend(); it--){
         DY = (*it)->backward(DY);
     }
-
 }
 //protected: for the training mode: end
 

@@ -152,6 +152,7 @@ xt::xarray<double> FCLayer::forward(xt::xarray<double> X) {
         Y = Y + m_aBias;
     return Y;
 }
+
 xt::xarray<double> FCLayer::backward(xt::xarray<double> DY) {
     //YOUR CODE IS HERE
     m_unSample_Counter += DY.shape()[0];
@@ -160,7 +161,7 @@ xt::xarray<double> FCLayer::backward(xt::xarray<double> DY) {
     for (int i = 0; i < n; i++) {
         xt::xarray<double> dy = xt::view(DY, i, xt::all());
         xt::xarray<double> x = xt::view(m_aCached_X, i, xt::all());
-        m_aGrad_W += xt::linalg::outer(dy, xt::transpose(x));
+        m_aGrad_W += xt::linalg::outer(dy, x);
     }
     if (m_bUse_Bias) {
         for (int i = 0; i < n; i++) {
@@ -169,6 +170,34 @@ xt::xarray<double> FCLayer::backward(xt::xarray<double> DY) {
     }
     return DX;
 }
+
+// xt::xarray<double> FCLayer::backward(xt::xarray<double> DY) {
+//     int n = DY.shape()[0];
+//     m_aGrad_W = xt::zeros_like(m_aGrad_W); // Initialize gradients to zero
+//     m_aGrad_b = xt::zeros_like(m_aGrad_b); // Initialize gradients to zero
+
+//     #pragma omp parallel for // Parallelize the loop
+//     for (int i = 0; i < n; i++) {
+//         xt::xarray<double> dy = xt::view(DY, i, xt::all());
+//         xt::xarray<double> x = xt::view(m_aCached_X, i, xt::all());
+//         #pragma omp critical // Ensure thread safety for the update
+//         {
+//             m_aGrad_W += xt::linalg::outer(dy, x);
+//         }
+//     }
+
+//     if (m_bUse_Bias) {
+//         #pragma omp parallel for // Parallelize the loop
+//         for (int i = 0; i < n; i++) {
+//             xt::xarray<double> dy = xt::view(DY, i, xt::all());
+//             #pragma omp critical // Ensure thread safety for the update
+//             {
+//                 m_aGrad_b += dy;
+//             }
+//         }
+//     }
+//     return xt::linalg::dot(DY, m_aWeights);
+// }
 
 int FCLayer::register_params(IParamGroup* ptr_group){
     ptr_group->register_param("weights", &m_aWeights, &m_aGrad_W);

@@ -30,13 +30,12 @@ ReLU::~ReLU() {}
 
 xt::xarray<double> ReLU::forward(xt::xarray<double> X) {
   // Todo CODE YOUR
-  xt::xarray<bool> M = xt::operator>=(X, 0.0);
-  m_aMask = M;
-  return xt::where(m_aMask, X, 0.0);
+  m_aMask = xt::operator>=(X, 0);
+  return xt::where(m_aMask, X, 0);
 }
 xt::xarray<double> ReLU::backward(xt::xarray<double> DY) {
   // Todo CODE YOUR
-  return xt::where(m_aMask, DY, 0.0);
+  return xt::where(m_aMask, DY, 0);
 }
 
 string ReLU::get_desc() {
