@@ -33,14 +33,15 @@ Softmax::~Softmax() {}
 
 xt::xarray<double> Softmax::forward(xt::xarray<double> X) {
   // Todo CODE YOUR
-  m_aCached_Y = xt::xarray<double>::from_shape(X.shape());
-  if (X.dimension() < 2) 
-    this->m_aCached_Y = softmax(X);
-  else {
-    for (int i = 0; i < X.shape()[0]; i++) {
-      xt::view(m_aCached_Y, i, xt::all()) = softmax(xt::view(X, i, xt::all()));
-    }
-  }
+  // m_aCached_Y = xt::xarray<double>::from_shape(X.shape());
+  // if (X.dimension() < 2) 
+  //   this->m_aCached_Y = softmax(X);
+  // else {
+  //   for (int i = 0; i < X.shape()[0]; i++) {
+  //     xt::view(m_aCached_Y, i, xt::all()) = softmax(xt::view(X, i, xt::all()));
+  //   }
+  // }
+  m_aCached_Y = softmax(X, m_nAxis);
   return m_aCached_Y;
 }
 

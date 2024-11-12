@@ -145,7 +145,7 @@ FCLayer::~FCLayer() {
 xt::xarray<double> FCLayer::forward(xt::xarray<double> X) {
     if (m_trainable)
         m_aCached_X = X;
-    xt::xarray<double> Y = xt::linalg::tensordot(X, xt::transpose(m_aWeights), {1}, {0});
+    xt::xarray<double> Y = xt::linalg::tensordot(X, xt::transpose(m_aWeights), 1);
     if (m_bUse_Bias)
         Y += m_aBias;
     return Y;
