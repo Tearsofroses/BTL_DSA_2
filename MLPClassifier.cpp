@@ -58,15 +58,15 @@ double_tensor MLPClassifier::predict(double_tensor X, bool make_decision){
     this->set_working_mode(false);
     
     //DO the inference
-    
     //YOUR CODE IS HERE
     double_tensor Y = this->forward(X);
     //RESTORE the previous mode
     this->set_working_mode(old_mode);
-
     //RETURN
-    if(make_decision) return Y;
-    else return xt::argmax(Y, -1);
+    if(make_decision)
+        return Y;
+    else
+        return xt::argmax(Y, -1);
 }
 
 double_tensor MLPClassifier::predict(
@@ -89,12 +89,14 @@ double_tensor MLPClassifier::predict(
     unsigned long long nsamples = 0;
     for(auto batch: *pLoader){
         //YOUR CODE IS HERE
+        double_tensor Y = forward(batch.getData());
         if (first_batch) {
-            results = forward(batch.getData());
+            results = Y;
             first_batch = false;
         }
         else {
-            results += forward(batch.getData());       
+            double_tensor temp = xt::concatenate(xt::xtuple(results, Y));
+            results = temp;
         }
     }
     cout << "Prediction: End" << endl;
@@ -102,8 +104,10 @@ double_tensor MLPClassifier::predict(
     //restore the old mode
     this->set_working_mode(old_mode);
     
-    if(make_decision) return results;
-    else return xt::argmax(results, -1);
+    if(make_decision)
+        return results;
+    else
+        return xt::argmax(results, -1);
 }
 
 
@@ -118,9 +122,9 @@ double_tensor MLPClassifier::evaluate(DataLoader<double, double>* pLoader){
         double_tensor X = batch.getData();
         double_tensor t = batch.getLabel();
         double_tensor Y = forward(X);
-        Y = xt::argmax(Y, -1);
-        t = xt::argmax(t, -1);
-        meter.accumulate(t, Y);
+        double_tensor Y_pred = xt::argmax(Y, -1);
+        double_tensor Y_true = xt::argmax(t, -1);
+        meter.accumulate(Y_true, Y_pred);
     }
     //YOUR CODE IS HERE
     double_tensor metrics = meter.get_metrics();
@@ -315,4 +319,3 @@ bool MLPClassifier::load(string model_path,  bool use_name_in_file){
     }
     return true;
 }
-

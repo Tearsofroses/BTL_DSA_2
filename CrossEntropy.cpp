@@ -37,8 +37,5 @@ xt::xarray<double> CrossEntropy::backward() {
   if (m_eReduction == LossReduction::REDUCE_MEAN) {
     grad_y /= m_aCached_Ypred.size();
   }
-  else {
-    grad_y = - grad_y;
-  }
   return grad_y;
 }
