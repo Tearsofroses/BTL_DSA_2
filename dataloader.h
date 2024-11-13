@@ -105,7 +105,7 @@ public:
     Batch<DType, LType> operator*() const {
       int start = curr_index * (data_loader->batch_size);
       int end = start + (data_loader->batch_size);
-      if (curr_index == data_loader->batch_count - 1 && !(data_loader->drop_last))
+      if (curr_index == data_loader->nbatch - 1 && !(data_loader->drop_last))
         end = data_loader->ptr_dataset->len();
       xt::svector<std::size_t> data_shape = data_loader->ptr_dataset->get_data_shape();
       xt::svector<std::size_t> label_shape = data_loader->ptr_dataset->get_label_shape();
@@ -113,7 +113,7 @@ public:
       if (label_shape.size() == 0) {
         xt::xarray<DType> batch_data = xt::zeros<DType>(data_shape);
         for (int i = start; i < end; i++) {
-          xt::view(batch_data, i - start) = data_loader->ptr_dataset->getitem(data_loader->index(i)).getData(); 
+          xt::view(batch_data, i - start) = data_loader->ptr_dataset->getitem(data_loader->item_indices(i)).getData(); 
         }
         return Batch<DType, LType> (batch_data, data_loader->ptr_dataset->getitem(0).getLabel());
       }
@@ -121,8 +121,8 @@ public:
       xt::xarray<DType> batch_data = xt::zeros<DType>(data_shape);
       xt::xarray<LType> batch_label = xt::empty<LType>(label_shape);
       for (int i = start; i < end; i++) {
-        xt::view(batch_data, i - start) = data_loader->ptr_dataset->getitem(data_loader->index(i)).getData();
-        xt::view(batch_label, i - start) = data_loader->ptr_dataset->getitem(data_loader->index(i)).getLabel();
+        xt::view(batch_data, i - start) = data_loader->ptr_dataset->getitem(data_loader->item_indices(i)).getData();
+        xt::view(batch_label, i - start) = data_loader->ptr_dataset->getitem(data_loader->item_indices(i)).getLabel();
       }
       return Batch<DType, LType> (batch_data, batch_label);
     }
@@ -130,4 +130,3 @@ public:
 };
 
 #endif /* DATALOADER_H */
-
